@@ -93,9 +93,11 @@ function SettingsIcon() {
 
 ### Content offset helpers
 
-- `.sh-nav-content-phone` -- `padding-bottom: 72px`
-- `.sh-nav-content-tablet` -- `padding-left: 56px`
-- `.sh-nav-content-desktop` -- `padding-left: 240px`
+Apply all three to your `<main>` element. Each is scoped to its own media query — they don't conflict:
+
+- `.sh-nav-content-phone` -- `padding-bottom: 72px + safe-area-inset-bottom` (active `< 640px`)
+- `.sh-nav-content-tablet` -- `padding-left: 56px` (active `640px - 1023px`)
+- `.sh-nav-content-desktop` -- `padding-left: 240px` (active `>= 1024px`)
 
 ## Hash routing
 

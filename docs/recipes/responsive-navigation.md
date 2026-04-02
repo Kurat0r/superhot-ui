@@ -249,11 +249,11 @@ The exact breakpoint values: **639px** is the last phone pixel, **1023px** is th
 
 Apply all three to your `<main>` element. Each one is scoped to its own media query, so they do not conflict:
 
-| Class                     | Effect                 | Active at         |
-| ------------------------- | ---------------------- | ----------------- |
-| `.sh-nav-content-phone`   | `padding-bottom: 72px` | `< 640px`         |
-| `.sh-nav-content-tablet`  | `padding-left: 56px`   | `640px -- 1023px` |
-| `.sh-nav-content-desktop` | `padding-left: 240px`  | `>= 1024px`       |
+| Class                     | Effect                             | Active at         |
+| ------------------------- | ---------------------------------- | ----------------- |
+| `.sh-nav-content-phone`   | `padding-bottom: 72px + safe-area` | `< 640px`         |
+| `.sh-nav-content-tablet`  | `padding-left: 56px`               | `640px -- 1023px` |
+| `.sh-nav-content-desktop` | `padding-left: 240px`              | `>= 1024px`       |
 
 ---
 

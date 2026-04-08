@@ -16,12 +16,13 @@
 
 ### Item object shape
 
-| Field    | Type      | Required | Description                                         |
-| -------- | --------- | -------- | --------------------------------------------------- |
-| `path`   | string    | yes      | Route path (matched against `currentPath`)          |
-| `label`  | string    | yes      | Display text                                        |
-| `icon`   | Component | yes      | Preact component rendered as `<item.icon />`        |
-| `system` | boolean   | no       | If true, item goes in "System" section / More sheet |
+| Field    | Type      | Required | Description                                                   |
+| -------- | --------- | -------- | ------------------------------------------------------------- |
+| `path`   | string    | yes      | Route path (matched against `currentPath`)                    |
+| `label`  | string    | yes      | Display text                                                  |
+| `icon`   | Component | yes      | Preact component rendered as `<item.icon />`                  |
+| `group`  | string    | no       | Section label — items with same group render under one header |
+| `system` | boolean   | no       | If true, item goes in "System" section / More sheet           |
 
 ## Three responsive modes
 

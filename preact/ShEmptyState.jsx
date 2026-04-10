@@ -1,32 +1,19 @@
 /**
- * ShEmptyState — terminal-styled empty/standby state.
- *
- * Signal: system idle, awaiting input
- * Emotional loop: stillness → anticipation
+ * ShEmptyState — the Quiet World (atmosphere-guide.md Rule 9).
+ * Renders a centered void state with a mantra and optional hint.
+ * No hooks — safe to call as plain function in tests.
  *
  * @param {object} props
- * @param {string} [props.message='STANDBY']
+ * @param {string} props.mantra - Primary empty-state message (e.g. "STANDBY", "NO DATA")
  * @param {string} [props.hint] - Keyboard shortcut or action hint (e.g. "Ctrl+K")
  * @param {string} [props.class]
  */
-export function ShEmptyState({ message = "STANDBY", hint, class: className, ...rest }) {
+export function ShEmptyState({ mantra, hint, class: cls, ...rest }) {
+  const className = ["sh-empty-state", cls].filter(Boolean).join(" ");
   return (
-    <div
-      class={`sh-frame${className ? ` ${className}` : ""}`}
-      style="text-align: center; padding: 48px 24px"
-      {...rest}
-    >
-      <div style="font-family: var(--font-mono); font-size: var(--type-display); color: var(--text-muted); letter-spacing: 0.2em">
-        {message}
-      </div>
-      {hint && (
-        <div
-          class="sh-cursor-idle"
-          style="font-family: var(--font-mono); font-size: var(--type-label); color: var(--text-secondary); margin-top: 12px"
-        >
-          {hint}
-        </div>
-      )}
+    <div class={className} {...rest}>
+      <div class="sh-empty-state__mantra">{mantra}</div>
+      {hint && <div class="sh-empty-state__hint">{hint}</div>}
     </div>
   );
 }

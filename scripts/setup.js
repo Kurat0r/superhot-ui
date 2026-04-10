@@ -8,11 +8,19 @@
  * 4. Detect esbuild.config.mjs and print Preact alias snippet if needed
  */
 
-import { existsSync, readFileSync, writeFileSync, unlinkSync, symlinkSync, lstatSync, readlinkSync } from 'node:fs';
-import { join, resolve, isAbsolute } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  unlinkSync,
+  symlinkSync,
+  lstatSync,
+  readlinkSync,
+} from "node:fs";
+import { join, resolve, isAbsolute } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // ─── fixSymlink ───────────────────────────────────────────────────────────────
 
@@ -24,34 +32,34 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
  * @returns {{ status: 'fixed'|'already-absolute'|'skip', target?: string, reason?: string }}
  */
 export function fixSymlink(consumerRoot, superhotAbsPath) {
-  const symlinkPath = join(consumerRoot, 'node_modules', 'superhot-ui');
+  const symlinkPath = join(consumerRoot, "node_modules", "superhot-ui");
 
   if (!existsSync(symlinkPath)) {
-    return { status: 'skip', reason: 'not installed as file: dep' };
+    return { status: "skip", reason: "not installed as file: dep" };
   }
 
   let stat;
   try {
     stat = lstatSync(symlinkPath);
   } catch {
-    return { status: 'skip', reason: 'not installed as file: dep' };
+    return { status: "skip", reason: "not installed as file: dep" };
   }
 
   if (!stat.isSymbolicLink()) {
-    return { status: 'skip', reason: 'not a symlink' };
+    return { status: "skip", reason: "not a symlink" };
   }
 
   const currentTarget = readlinkSync(symlinkPath);
 
   if (isAbsolute(currentTarget) && currentTarget === superhotAbsPath) {
-    return { status: 'already-absolute' };
+    return { status: "already-absolute" };
   }
 
   // Rewrite to absolute
   unlinkSync(symlinkPath);
   symlinkSync(superhotAbsPath, symlinkPath);
 
-  return { status: 'fixed', target: superhotAbsPath };
+  return { status: "fixed", target: superhotAbsPath };
 }
 
 // ─── injectClaudeBlock ────────────────────────────────────────────────────────
@@ -65,40 +73,40 @@ export function fixSymlink(consumerRoot, superhotAbsPath) {
  * @returns {{ status: 'created'|'injected'|'up-to-date'|'updated' }}
  */
 export function injectClaudeBlock(consumerRoot, blockTemplate, version) {
-  const claudePath = join(consumerRoot, 'CLAUDE.md');
+  const claudePath = join(consumerRoot, "CLAUDE.md");
   const marker = `<!-- superhot-ui:${version} -->`;
   const fullBlock = `${marker}\n${blockTemplate}`;
 
   if (!existsSync(claudePath)) {
-    writeFileSync(claudePath, fullBlock, 'utf8');
-    return { status: 'created' };
+    writeFileSync(claudePath, fullBlock, "utf8");
+    return { status: "created" };
   }
 
-  const content = readFileSync(claudePath, 'utf8');
+  const content = readFileSync(claudePath, "utf8");
 
   // Check for existing marker (any version)
   const anyMarkerMatch = content.match(/<!-- superhot-ui:([\d.]+) -->/);
 
   if (!anyMarkerMatch) {
     // No marker — append block
-    const separator = content.endsWith('\n') ? '\n' : '\n\n';
-    writeFileSync(claudePath, content + separator + fullBlock, 'utf8');
-    return { status: 'injected' };
+    const separator = content.endsWith("\n") ? "\n" : "\n\n";
+    writeFileSync(claudePath, content + separator + fullBlock, "utf8");
+    return { status: "injected" };
   }
 
   const existingVersion = anyMarkerMatch[1];
 
   if (existingVersion === version) {
-    return { status: 'up-to-date' };
+    return { status: "up-to-date" };
   }
 
   // Different version — replace the block
   // Match from the marker through the block content, stopping before the next top-level section
   const replaceRegex = /<!-- superhot-ui:[\d.]+ -->[\s\S]*?(?=\n## |\n# |$)/;
   const updated = content.replace(replaceRegex, fullBlock);
-  const finalContent = updated.endsWith('\n') ? updated : updated + '\n';
-  writeFileSync(claudePath, finalContent, 'utf8');
-  return { status: 'updated' };
+  const finalContent = updated.endsWith("\n") ? updated : updated + "\n";
+  writeFileSync(claudePath, finalContent, "utf8");
+  return { status: "updated" };
 }
 
 // ─── patchPackageJson ─────────────────────────────────────────────────────────
@@ -110,35 +118,38 @@ export function injectClaudeBlock(consumerRoot, blockTemplate, version) {
  * @returns {{ status: 'patched'|'already-configured'|'skip', reason?: string }}
  */
 export function patchPackageJson(consumerRoot) {
-  const pkgPath = join(consumerRoot, 'package.json');
+  const pkgPath = join(consumerRoot, "package.json");
 
   if (!existsSync(pkgPath)) {
-    return { status: 'skip', reason: 'no package.json' };
+    return { status: "skip", reason: "no package.json" };
   }
 
   let pkg;
   try {
-    pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
   } catch {
-    return { status: 'skip', reason: 'package.json is malformed' };
+    return { status: "skip", reason: "package.json is malformed" };
   }
 
-  if (pkg.scripts && pkg.scripts.postinstall && pkg.scripts.postinstall.includes('superhot-ui')) {
-    return { status: 'already-configured' };
+  if (pkg.scripts && pkg.scripts.postinstall && pkg.scripts.postinstall.includes("superhot-ui")) {
+    return { status: "already-configured" };
   }
 
-  if (pkg.scripts && pkg.scripts.postinstall && !pkg.scripts.postinstall.includes('superhot-ui')) {
-    return { status: 'skip', reason: 'postinstall exists — add manually: node node_modules/superhot-ui/scripts/setup.js' };
+  if (pkg.scripts && pkg.scripts.postinstall && !pkg.scripts.postinstall.includes("superhot-ui")) {
+    return {
+      status: "skip",
+      reason: "postinstall exists — add manually: node node_modules/superhot-ui/scripts/setup.js",
+    };
   }
 
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
 
-  pkg.scripts.postinstall = 'node node_modules/superhot-ui/scripts/setup.js';
+  pkg.scripts.postinstall = "node node_modules/superhot-ui/scripts/setup.js";
 
-  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-  return { status: 'patched' };
+  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  return { status: "patched" };
 }
 
 // ─── detectEsbuild ────────────────────────────────────────────────────────────
@@ -157,69 +168,73 @@ alias: {
  * @returns {{ status: 'needs-config'|'already-configured'|'skip', snippet?: string }}
  */
 export function detectEsbuild(consumerRoot) {
-  const esbuildPath = join(consumerRoot, 'esbuild.config.mjs');
+  const esbuildPath = join(consumerRoot, "esbuild.config.mjs");
 
   if (!existsSync(esbuildPath)) {
-    return { status: 'skip' };
+    return { status: "skip" };
   }
 
-  const content = readFileSync(esbuildPath, 'utf8');
+  const content = readFileSync(esbuildPath, "utf8");
 
-  if (content.includes('preact') && content.includes('path.resolve')) {
-    return { status: 'already-configured' };
+  if (content.includes("preact") && content.includes("path.resolve")) {
+    return { status: "already-configured" };
   }
 
-  return { status: 'needs-config', snippet: PREACT_ALIAS_SNIPPET };
+  return { status: "needs-config", snippet: PREACT_ALIAS_SNIPPET };
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
 
 function main() {
   const consumerRoot = process.cwd();
-  const superhotAbsPath = resolve(__dirname, '..');
+  const superhotAbsPath = resolve(__dirname, "..");
 
   // Skip if running inside the superhot-ui package root itself
   if (consumerRoot === superhotAbsPath) {
-    console.log('[superhot-ui setup] skipping: running inside package root');
+    console.log("[superhot-ui setup] skipping: running inside package root");
     return;
   }
 
   // Read version from this package's package.json and block template
   let version, blockTemplate;
   try {
-    version = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')).version;
-    blockTemplate = readFileSync(resolve(__dirname, '../docs/consumer-claude-md.md'), 'utf8');
+    version = JSON.parse(readFileSync(resolve(__dirname, "../package.json"), "utf8")).version;
+    blockTemplate = readFileSync(resolve(__dirname, "../docs/consumer-claude-md.md"), "utf8");
   } catch (err) {
     console.error(`[superhot-ui setup] Failed to read package files: ${err.message}`);
-    console.error('Ensure superhot-ui is properly installed with npm run build.');
+    console.error("Ensure superhot-ui is properly installed with npm run build.");
     process.exit(1);
   }
 
   // Run all steps and print results
   const symResult = fixSymlink(consumerRoot, superhotAbsPath);
-  const symIcon = symResult.status === 'fixed' ? '✓' : '·';
-  console.log(`${symIcon} symlink: ${symResult.status}${symResult.reason ? ` (${symResult.reason})` : ''}`);
+  const symIcon = symResult.status === "fixed" ? "✓" : "·";
+  console.log(
+    `${symIcon} symlink: ${symResult.status}${symResult.reason ? ` (${symResult.reason})` : ""}`,
+  );
 
   const claudeResult = injectClaudeBlock(consumerRoot, blockTemplate, version);
-  const claudeIcon = claudeResult.status === 'up-to-date' ? '·' : '✓';
+  const claudeIcon = claudeResult.status === "up-to-date" ? "·" : "✓";
   console.log(`${claudeIcon} CLAUDE.md: ${claudeResult.status}`);
 
   const pkgResult = patchPackageJson(consumerRoot);
-  const pkgIcon = pkgResult.status === 'patched' ? '✓' : '·';
-  console.log(`${pkgIcon} package.json: ${pkgResult.status}${pkgResult.reason ? ` (${pkgResult.reason})` : ''}`);
+  const pkgIcon = pkgResult.status === "patched" ? "✓" : "·";
+  console.log(
+    `${pkgIcon} package.json: ${pkgResult.status}${pkgResult.reason ? ` (${pkgResult.reason})` : ""}`,
+  );
 
   const esbuildResult = detectEsbuild(consumerRoot);
-  const esbuildIcon = esbuildResult.status === 'needs-config' ? '⚠' : '·';
+  const esbuildIcon = esbuildResult.status === "needs-config" ? "⚠" : "·";
   console.log(`${esbuildIcon} esbuild: ${esbuildResult.status}`);
 
-  if (esbuildResult.status === 'needs-config') {
-    console.log('  Add the following Preact alias to your esbuild config:');
-    for (const line of esbuildResult.snippet.split('\n')) {
+  if (esbuildResult.status === "needs-config") {
+    console.log("  Add the following Preact alias to your esbuild config:");
+    for (const line of esbuildResult.snippet.split("\n")) {
       console.log(`  ${line}`);
     }
   }
 
-  console.log('\nDone. See node_modules/superhot-ui/docs/ for full design docs.');
+  console.log("\nDone. See node_modules/superhot-ui/docs/ for full design docs.");
 }
 
 main();

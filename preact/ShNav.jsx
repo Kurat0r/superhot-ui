@@ -84,6 +84,59 @@ function MoreIcon() {
   );
 }
 
+/** Render nav items with group section labels at group transitions. */
+function GroupedNavItems({ items, currentPath, style }) {
+  let lastGroup = null;
+  return items
+    .filter((it) => !it.system)
+    .map((item) => {
+      const showLabel = item.group && item.group !== lastGroup;
+      lastGroup = item.group || lastGroup;
+      const active = currentPath === item.path;
+      return (
+        <>
+          {showLabel && (
+            <div class="sh-nav-section-label" style="cursor: default;">
+              <span>{item.group}</span>
+            </div>
+          )}
+          <a
+            key={item.path}
+            href={`#${item.path}`}
+            class={`sh-nav-item${active ? " sh-nav-item--active" : ""}`}
+            style={style}
+            aria-label={item.label}
+          >
+            <item.icon />
+            {item.label}
+          </a>
+        </>
+      );
+    });
+}
+
+/**
+ * Get primary tab items for phone nav.
+ * If items use groups, pick the first item from each group (up to 4).
+ * Otherwise, use first 4 non-system items.
+ */
+function getPhoneTabs(items) {
+  const nonSystem = items.filter((it) => !it.system);
+  const hasGroups = nonSystem.some((it) => it.group);
+  if (!hasGroups) return nonSystem.slice(0, 4);
+  const seen = new Set();
+  const tabs = [];
+  for (const item of nonSystem) {
+    const g = item.group || "__default__";
+    if (!seen.has(g)) {
+      seen.add(g);
+      tabs.push(item);
+      if (tabs.length >= 4) break;
+    }
+  }
+  return tabs;
+}
+
 function PhoneNav({ items, currentPath, footer }) {
   let moreOpen, setMoreOpen;
   try {
@@ -93,7 +146,7 @@ function PhoneNav({ items, currentPath, footer }) {
     setMoreOpen = () => {};
   }
 
-  const primaryItems = items.filter((it) => !it.system).slice(0, 4);
+  const primaryItems = getPhoneTabs(items);
   const systemItems = items.filter((it) => it.system);
 
   return (
@@ -205,21 +258,29 @@ function TabletNav({ items, currentPath, logo, footer }) {
         <div style="flex: 1; overflow-y: auto; padding: 4px 0;">
           {expanded ? (
             <>
-              {primaryItems.map((item) => {
-                const active = currentPath === item.path;
-                return (
-                  <a
-                    key={item.path}
-                    href={`#${item.path}`}
-                    class={`sh-nav-item${active ? " sh-nav-item--active" : ""}`}
-                    style="padding-left: 14px;"
-                    aria-label={item.label}
-                  >
-                    <item.icon />
-                    {item.label}
-                  </a>
-                );
-              })}
+              {primaryItems.some((it) => it.group) ? (
+                <GroupedNavItems
+                  items={items}
+                  currentPath={currentPath}
+                  style="padding-left: 14px;"
+                />
+              ) : (
+                primaryItems.map((item) => {
+                  const active = currentPath === item.path;
+                  return (
+                    <a
+                      key={item.path}
+                      href={`#${item.path}`}
+                      class={`sh-nav-item${active ? " sh-nav-item--active" : ""}`}
+                      style="padding-left: 14px;"
+                      aria-label={item.label}
+                    >
+                      <item.icon />
+                      {item.label}
+                    </a>
+                  );
+                })
+              )}
               {items.some((it) => it.system) && (
                 <>
                   <button
@@ -295,20 +356,24 @@ function DesktopNav({ items, currentPath, logo, footer }) {
       {logo && <div style="padding: 20px;">{logo}</div>}
 
       <div style="flex: 1; padding: 12px; overflow-y: auto;">
-        {primaryItems.map((item) => {
-          const active = currentPath === item.path;
-          return (
-            <a
-              key={item.path}
-              href={`#${item.path}`}
-              class={`sh-nav-item${active ? " sh-nav-item--active" : ""}`}
-              aria-label={item.label}
-            >
-              <item.icon />
-              {item.label}
-            </a>
-          );
-        })}
+        {primaryItems.some((it) => it.group) ? (
+          <GroupedNavItems items={items} currentPath={currentPath} />
+        ) : (
+          primaryItems.map((item) => {
+            const active = currentPath === item.path;
+            return (
+              <a
+                key={item.path}
+                href={`#${item.path}`}
+                class={`sh-nav-item${active ? " sh-nav-item--active" : ""}`}
+                aria-label={item.label}
+              >
+                <item.icon />
+                {item.label}
+              </a>
+            );
+          })
+        )}
 
         {items.some((it) => it.system) && (
           <>

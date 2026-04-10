@@ -201,11 +201,91 @@
     <div id="toast-container" class="sh-toast-container" style="position: static; margin-top: 1rem; max-width: 100%;"></div>
   </div>
 
+  <!-- PORTAL — narrator + announcements + antlines -->
+  <h2>[ NARRATOR — personality-driven system voice ]</h2>
+  <div class="card">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+      <button onclick="setPersonality('glados')">GLaDOS</button>
+      <button onclick="setPersonality('cave')">Cave Johnson</button>
+      <button onclick="setPersonality('wheatley')">Wheatley</button>
+      <button onclick="setPersonality('turret')">Turret</button>
+      <button onclick="setPersonality('superhot')">SUPERHOT</button>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+      <button onclick="narrateDemo('toast')">Toast</button>
+      <button onclick="narrateDemo('error')">Error</button>
+      <button onclick="narrateDemo('greeting')">Greeting</button>
+      <button onclick="narrateDemo('warning')">Warning</button>
+      <button onclick="narrateDemo('success')">Success</button>
+      <button onclick="narrateDemo('loading')">Loading</button>
+    </div>
+    <div id="narrator-output" style="font-family: var(--sh-font); padding: 0.75rem; border: 1px solid #333; min-height: 2.5rem;"></div>
+  </div>
+
+  <!-- ANNOUNCEMENT BANNER -->
+  <h2>[ ANNOUNCEMENT — auto-typing narrative banner ]</h2>
+  <div class="card" style="padding: 0;">
+    <div id="announcement-glados" class="sh-announcement" data-sh-personality="glados">
+      <span class="sh-announcement-source">ENRICHMENT CENTER</span>
+      <span>The Enrichment Center regrets to inform you that this next test is impossible. Make no attempt to solve it.<span class="sh-announcement-cursor"></span></span>
+    </div>
+  </div>
+  <div class="card" style="padding: 0; margin-top: 0.5rem;">
+    <div class="sh-announcement" data-sh-personality="cave">
+      <span class="sh-announcement-source">CAVE JOHNSON</span>
+      <span>Science isn't about why. It's about why not.<span class="sh-announcement-cursor"></span></span>
+    </div>
+  </div>
+
+  <!-- ANTLINE -->
+  <h2>[ ANTLINE — Portal indicator connections ]</h2>
+  <div class="card">
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+      <button onclick="toggleAntline()">Toggle Active</button>
+    </div>
+    <div id="antline-demo" class="sh-antline">
+      <div class="sh-antline-node"></div>
+      <div class="sh-antline-line"></div>
+      <div style="padding: 0.5rem 1rem; border: 1px solid #444; font-family: var(--sh-font); font-size: 0.8rem;">CONNECTED ELEMENT</div>
+      <div class="sh-antline-line"></div>
+      <div class="sh-antline-node"></div>
+    </div>
+  </div>
+
+  <!-- TEST CHAMBER -->
+  <h2>[ TEST CHAMBER — panel assembly animation ]</h2>
+  <div class="card">
+    <button onclick="resetChamber()" style="margin-bottom: 1rem;">Reassemble Panels</button>
+    <div id="chamber-demo" class="sh-test-chamber">
+      <span class="sh-test-chamber-number">CHAMBER 01</span>
+      <div class="sh-panel" style="padding: 0.75rem; border: 1px solid #444; margin-bottom: 0.5rem;">Panel A — Data View</div>
+      <div class="sh-panel" style="padding: 0.75rem; border: 1px solid #444; margin-bottom: 0.5rem;">Panel B — Controls</div>
+      <div class="sh-panel" style="padding: 0.75rem; border: 1px solid #444;">Panel C — Status</div>
+    </div>
+  </div>
+
+  <!-- PORTAL AUDIO -->
+  <h2>[ PORTAL AUDIO — facility sounds ]</h2>
+  <div class="card">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <button onclick="playSfxDemo('portal-chime')">Portal Chime</button>
+      <button onclick="playSfxDemo('portal-fail')">Portal Fail</button>
+      <button onclick="playSfxDemo('turret-deploy')">Turret Deploy</button>
+      <button onclick="playSfxDemo('turret-shutdown')">Turret Shutdown</button>
+      <button onclick="playSfxDemo('facility-hum')">Facility Hum</button>
+      <button onclick="playSfxDemo('panel-slide')">Panel Slide</button>
+    </div>
+  </div>
+
   <script type="module">
     import { applyFreshness } from '../js/freshness.js';
     import { shatterElement } from '../js/shatter.js';
     import { glitchText } from '../js/glitch.js';
     import { applyMantra, removeMantra } from '../js/mantra.js';
+    import { narrate, ShNarrator } from '../js/narrator.js';
+    import { ShAudio, playSfx } from '../js/audio.js';
+
+    ShAudio.enabled = true;
 
     window.applyFreshness = applyFreshness;
     window.shatterElement = shatterElement;
@@ -267,6 +347,42 @@
         vramPct.textContent = `${val}%`;
       });
     }
+
+    // Narrator demo
+    window.setPersonality = (p) => {
+      ShNarrator.personality = p;
+      document.getElementById('narrator-output').textContent = `Personality set to: ${p}`;
+    };
+    window.narrateDemo = (category) => {
+      const phrase = narrate(category);
+      document.getElementById('narrator-output').textContent = phrase;
+    };
+
+    // Antline demo
+    let antlineActive = false;
+    window.toggleAntline = () => {
+      antlineActive = !antlineActive;
+      const demo = document.getElementById('antline-demo');
+      demo.querySelectorAll('.sh-antline-node, .sh-antline-line').forEach(el => {
+        el.setAttribute('data-sh-antline-active', String(antlineActive));
+      });
+    };
+
+    // Test chamber reassembly demo
+    window.resetChamber = () => {
+      const chamber = document.getElementById('chamber-demo');
+      const panels = chamber.querySelectorAll('.sh-panel');
+      panels.forEach(p => {
+        p.style.animation = 'none';
+        p.offsetHeight; // trigger reflow
+        p.style.animation = '';
+      });
+    };
+
+    // Portal audio demo
+    window.playSfxDemo = (type) => {
+      playSfx(type);
+    };
 
     // Toast demo — uses safe DOM methods (no innerHTML)
     window.showToast = (type, message) => {

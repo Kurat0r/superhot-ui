@@ -10,6 +10,21 @@ This project consumes superhot-ui for all visual effects and UI components.
 - Experience design: `node_modules/superhot-ui/docs/experience-design.md`
 - Component docs: `node_modules/superhot-ui/docs/components/`
 
+### Palette
+
+Six palette colors — four original SUPERHOT, two Portal:
+
+| Token                  | Role                                       |
+| ---------------------- | ------------------------------------------ |
+| `--sh-bright` (white)  | Primary text, active elements              |
+| `--sh-void` (black)    | Backgrounds, negative space                |
+| `--sh-threat` (red)    | Danger, failure, critical state            |
+| `--sh-phosphor` (cyan) | Health, connection, interactive elements   |
+| `--sh-portal-blue`     | Portal connection lines, inactive antlines |
+| `--sh-portal-orange`   | Active antlines, flow indicators           |
+
+Facility state shifts Portal tokens — in `breach` mode, all six converge toward threat red.
+
 ### Key Rules
 
 **Typography — terminal voice, not web UI**
@@ -26,21 +41,26 @@ This project consumes superhot-ui for all visual effects and UI components.
 - Active route: phosphor left border — never filled highlight or background
 - No hover tooltips — if a label needs one, it's too long
 
-**Interface health states — whole interface changes at once**
+**Facility state — the atmosphere master switch**
 
-- Operational: phosphor calm, no pulse, CRT scanlines only
-- Degraded: ShThreatPulse + ShGlitch on affected surfaces, Incident HUD surfaces
-- Critical: ShMantra on layout root, header pulses, all failed nodes pulse
+- `setFacilityState('normal')` — Portal blue, calm (all systems healthy)
+- `setFacilityState('alert')` — SUPERHOT red bleeds into Portal blue (degraded)
+- `setFacilityState('breach')` — Full threat mode, all Portal tokens become red (critical)
+- Wire to health detection: breach when critical, alert when degraded, normal when healthy
+- One call on `<html>` — every component inherits the shift via CSS custom properties
+- This is the CSS atmosphere layer. The JS escalation APIs (`orchestrateEscalation`, `EscalationTimer`) animate specific surfaces over time. Use both together.
+
+**Interface health states — 7 coordinated surfaces**
+
+1. Facility state — `setFacilityState()` shifts all Portal colors globally (the umbrella)
+2. Graph node — `ShThreatPulse persistent`, color shifts to `--sh-threat`
+3. Stat card — `status="error"` + `ShThreatPulse`
+4. Sidebar — indicator dot pulses threat red
+5. Incident HUD — `ShIncidentHUD` banner with severity + message
+6. Toast — `ShToast type="error" duration={0}` (persistent)
+7. Layout root (critical only) — `ShMantra` watermarks entire interface
+
 - Rule: health state changes the whole interface simultaneously — never card by card
-
-**Failure theater — 6 coordinated surfaces**
-
-1. Graph node — `ShThreatPulse persistent`, color shifts to `--sh-threat`
-2. Stat card — `status="error"` + `ShThreatPulse`
-3. Sidebar — indicator dot pulses threat red
-4. Incident HUD — `ShThreatPulse` + `ShMantra text="SYSTEM DEGRADED"`
-5. Toast — `ShToast type="error" duration={0}` (persistent)
-6. Layout root (critical only) — `ShMantra` watermarks entire interface
 
 **Time-freeze discipline — data age is visible**
 
@@ -48,56 +68,56 @@ This project consumes superhot-ui for all visual effects and UI components.
 - Fresh: 0–5min (full color), Cooling: 5–30min (desaturated), Frozen: 30–60min (grey), Stale: 60+min (ghost + NO DATA mantra)
 - Header "last updated": `applyFreshness(el, timestamp)`
 
+**Narrator — personality-driven UI text**
+
+- Set once at init: `ShNarrator.personality = 'glados'` + `ShAudio.narratorPersonality = 'glados'` (keep in sync)
+- `narrate('error')` for personality-appropriate phrases, `narrate('loading')` for loading text, etc.
+- 5 personalities: `glados`, `cave`, `wheatley`, `turret`, `superhot`
+- 12 categories: `toast`, `error`, `loading`, `status`, `empty`, `greeting`, `farewell`, `countdown`, `warning`, `destructive`, `success`, `search`
+- Narrator does NOT auto-change based on facility state — switch personality explicitly if needed
+- Use `ShAnnouncement` component for typed-out narrative banners with personality styling
+- Personality is context, not preference: GLaDOS for main monitoring, Cave for onboarding/about, Wheatley for user-facing recovery, Turret for terse alerts, SUPERHOT for breach mantras
+- During `breach`, use only GLaDOS (coldest), Turret, or SUPERHOT — other personalities fight the severity
+
+**Portal components**
+
+- `ShAntline` — animated connecting line between elements. `active` toggles orange/blue. Colors shift with facility state.
+- `ShTestChamber` — panel assembly container. Children with `.sh-panel` class animate in staggered. `compromised={true}` for failure state.
+- `ShAnnouncement` — narrative banner with typing effect. Set `personality` + `message` + optional `source` label.
+
 **Emotional arc — every session follows this loop**
 Tension → Pause → Plan → Execute → Catharsis
 
-- Page load: `ShSkeleton` everywhere (Tension → Pause)
+- Page load: `ShTestChamber` panels assemble + `ShSkeleton` everywhere + `ShAnnouncement` greeting (Tension → Pause)
 - Data stale: `ShFrozen` activates, mantra appears (Tension)
-- Service failure: `ShThreatPulse` + `ShGlitch` + `ShMantra` broadcast (Tension)
+- Service failure: `setFacilityState('alert'|'breach')` + escalation + narrator error phrases (Tension)
 - Command palette opens: glitch burst — "I'm taking action" (Plan)
-- Recovery: `ShGlitch` burst then phosphor calm (Catharsis)
-- Job complete: `playSfx('complete')` if audio enabled (Catharsis)
+- Recovery: `setFacilityState('normal')` + `recoverySequence()` + narrator success phrase (Catharsis)
+- Job complete: `playSfx('complete')` (personality-remapped) if audio enabled (Catharsis)
 
 **Interaction feedback — no silent actions**
 
-| Action               | Response                                                 |
-| -------------------- | -------------------------------------------------------- |
-| Open command palette | `ShCommandPalette` opens with glitch burst               |
-| Dismiss alert        | `shatterElement` on the element                          |
-| Job submitted        | `ShToast type="info"` + `playSfx('complete')`            |
-| Job failed           | `ShToast type="error" duration={0}` + `playSfx('error')` |
-| Navigate route       | `@starting-style` entrance on incoming content           |
-| Data refreshed       | `ShGlitch` micro-burst on "last updated" timestamp       |
-| Service recovers     | `ShGlitch` burst on node, then phosphor calm             |
+| Action               | Response                                                            |
+| -------------------- | ------------------------------------------------------------------- |
+| Open command palette | `ShCommandPalette` opens with glitch burst                          |
+| Dismiss alert        | `shatterElement` on the element                                     |
+| Job submitted        | `ShToast type="info"` + `playSfx('complete')`                       |
+| Job failed           | `ShToast type="error" duration={0}` + `playSfx('error')`            |
+| Navigate route       | `@starting-style` entrance on incoming content                      |
+| Data refreshed       | `ShGlitch` micro-burst on "last updated" timestamp                  |
+| Service recovers     | `setFacilityState('normal')` + `ShGlitch` burst, then phosphor calm |
 
-**Atmosphere rules (key subset from atmosphere-guide.md)**
+**Audio — all SFX through one system**
 
-- Void ≥ 60% of viewport — if components cover more than 40%, the aesthetic collapses
-- Red budget ≤ 10% of visible surface during healthy state — scarcity = power
-- Max 3 simultaneous animated effects per viewport — use `trackEffect()` / `isOverBudget()`
-- Rest frames between animations: 300ms after shatter, 200ms after glitch, 500ms after state change
-- Glow hierarchy: ambient (4px), standard (8px), critical (16px) — one critical glow per viewport
-- Empty states show `ShEmptyState` with piOS mantra (`STANDBY`, `NO DATA`) — never apologetic text
-- CRT presets: `data` for tables, `status` for dashboards, `off` for mobile
-- Shatter presets by emotion: `toast` (4), `cancel` (6), `alert` (8), `purge` (12)
-- Hover reveals (phosphor left-border), never swaps background — hover is interrogation
-- Focus ring is threat-red (`2px solid var(--sh-threat)`) — focus is targeting
-- Numbers are absolute (`197` not "~200", `3h 14m` not "about 3 hours ago")
-- Time is military (`14:23:07`, `2026-03-16`) — no AM/PM, no month names
-- No icons — use text labels (`[PAUSE]` not ⏸, `ALERTS: 3` not 🔔)
-- Tables are logs — monospace, left-justified, timestamps first, status last
-- Modals are system interrupts — `CONFIRM: PURGE DLQ?` not "Are you sure?"
-- Alerts are binary: auto-dismiss (info) or persist until acknowledged (error) — nothing in between
-- Grids are crystalline — CSS Grid with uniform columns, void cells over collapsed layout
-- Error recovery is visible — glitch burst + border transition + toast confirmation
-- Interface has memory — `localStorage` for all UI preferences (CRT, sort, collapsed state)
-- Thresholds visible before they break — progressive glow as metrics approach danger zones
-- Skeleton shapes match content — stat card skeleton looks like a stat card, not a generic pill
+- Original: `complete`, `error`, `dlq`, `pause`
+- Portal: `portal-chime`, `portal-fail`, `turret-deploy`, `turret-shutdown`, `facility-hum`, `panel-slide`
+- Tension: `setTensionDrone(level)` / `stopTensionDrone()` (auto-wired into `orchestrateEscalation`)
+- Personality remapping: `complete` → `portal-chime` (GLaDOS/Cave/Wheatley) or `turret-deploy` (Turret)
+- `ShAudio.enabled` defaults to `false` — always set from user preference, never automatically
 
 **Component rules**
 
 - Every effect communicates exactly one signal — not "status plus action"
-- Effects use only four palette colors: white (`--sh-bright`), black (`--sh-void`), red (`--sh-threat`), cyan (`--sh-phosphor`)
 - New UI patterns go in superhot-ui first — never build a DS component directly in this project
 - Components are diegetic — no decorative animation (no bounce, wiggle, idle flip)
 - Layout components (grids, sidebars, nav) live in the consuming project, not superhot-ui
@@ -107,6 +127,9 @@ Tension → Pause → Plan → Execute → Catharsis
 - Never use `h` or `Fragment` as callback param names in JSX — esbuild injects `h` as JSX factory, shadowing it causes silent render crashes
 - `shatterElement` requires `position: relative` on the parent element
 - `--sh-fill` in `.sh-vram-bar` is a unitless number 0–100, not a percentage string (`72` not `"72%"`)
-- `ShAudio.enabled` defaults to `false` — always set from user preference, never automatically
 - `@import 'superhot-ui/css'` fails silently inside inline `<style>` blocks (no base URL) — inject as separate `<style>` elements
 - esbuild + `file:` dep: pin all Preact imports in `esbuild.config.mjs` to avoid dual-Preact crash (see consumer-guide.md)
+- `ShAnnouncement` respects `prefers-reduced-motion` — shows full text immediately, no typing effect
+- `ShTestChamber` plays `panel-slide` SFX on mount — only audible when `ShAudio.enabled = true`
+- `setFacilityState()` is a no-op during SSR (checks `typeof document`) — safe to call unconditionally
+- `ShNarrator.personality` and `ShAudio.narratorPersonality` must be set together — mismatched values cause narrator text and SFX to use different personalities

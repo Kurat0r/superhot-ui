@@ -78,12 +78,12 @@ export function ShDataTable({ columns = [], rows = [], searchable = true, label 
                   }
                 >
                   {col.label}
-                  {sortKey === col.key ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
+                  {sortKey === col.key ? (sortDir === "asc" ? " [ASC]" : " [DESC]") : ""}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody class="sh-stagger-children">
             {filtered.length === 0 ? (
               <tr>
                 <td colspan={columns.length} class="sh-data-table-empty">

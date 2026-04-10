@@ -9,73 +9,73 @@
    ═══════════════════════════════════════ */
 
 @property --sh-threat {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: oklch(52% 0.22 25);
 }
 
 @property --sh-phosphor {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: oklch(85% 0.18 195);
 }
 
 @property --sh-frozen {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: oklch(55% 0.04 240);
 }
 
 @property --sh-glass {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: oklch(95% 0.04 25);
 }
 
 @property --sh-void {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: #000000;
 }
 
 @property --sh-bright {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: #ffffff;
 }
 
 @property --sh-middle {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: #d3d3d3;
 }
 
 @property --sh-dim {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: true;
   initial-value: #808080;
 }
 
 @property --sh-shatter-duration {
-  syntax: '<time>';
+  syntax: "<time>";
   inherits: true;
   initial-value: 600ms;
 }
 
 @property --sh-glitch-duration {
-  syntax: '<time>';
+  syntax: "<time>";
   inherits: true;
   initial-value: 300ms;
 }
 
 @property --sh-threat-pulse-duration {
-  syntax: '<time>';
+  syntax: "<time>";
   inherits: true;
   initial-value: 1.5s;
 }
 
 @property --sh-frost-shimmer-duration {
-  syntax: '<time>';
+  syntax: "<time>";
   inherits: true;
   initial-value: 3s;
 }
@@ -111,10 +111,10 @@
   /* piOS text hierarchy */
   --sh-bright: #ffffff;
   --sh-middle: light-dark(#696969, #d3d3d3);
-  --sh-dim:    light-dark(#a9a9a9, #808080);
+  --sh-dim: light-dark(#a9a9a9, #808080);
 
   /* piOS terminal font stack */
-  --sh-font: 'Perfect DOS VGA 437', 'Fixedsys Excelsior', monospace;
+  --sh-font: "Perfect DOS VGA 437", "Fixedsys Excelsior", monospace;
 
   /* Timing */
   --sh-shatter-duration: 600ms;
@@ -123,7 +123,20 @@
   --sh-frost-shimmer-duration: 3s;
 
   /* CRT toggles — set to 'block' to enable each layer */
-  --sh-crt-stripe: block;   /* static scanline stripes (cheap) */
-  --sh-crt-scanline: none;  /* moving scan beam (performance-intensive) */
-  --sh-crt-flicker: none;   /* phosphor flicker (a11y: photosensitivity risk) */
+  --sh-crt-stripe: block; /* static scanline stripes (cheap) */
+  --sh-crt-scanline: none; /* moving scan beam (performance-intensive) */
+  --sh-crt-flicker: none; /* phosphor flicker (a11y: photosensitivity risk) */
+
+  /* ── Portal-inspired tokens ── */
+  --sh-portal-orange: #ff9a00;
+  --sh-portal-blue: #27a7d8;
+  --sh-terminal-amber: #d4a020;
+  --sh-terminal-bg: #3a1f00;
+  --sh-portal-orange-glow: color-mix(in oklch, var(--sh-portal-orange) 20%, transparent);
+  --sh-portal-blue-glow: color-mix(in oklch, var(--sh-portal-blue) 20%, transparent);
+
+  /* Antline animation duration */
+  --sh-antline-duration: 1.5s;
+  /* Panel slide transition duration */
+  --sh-panel-slide-duration: 400ms;
 }

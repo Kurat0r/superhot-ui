@@ -1,22 +1,15 @@
-export const SHATTER_PRESETS = {
-  toast: { fragments: 4 },
-  cancel: { fragments: 6 },
-  alert: { fragments: 8 },
-  purge: { fragments: 12 },
-};
+import { playSfx } from "./audio.js";
 
 /**
  * Shatter an element into triangular fragments that drift and fade.
  *
  * @param {Element} element - DOM element to shatter
- * @param {object|string} [optsOrPreset] - Options object or preset name
- * @param {number} [optsOrPreset.fragments=12] - Number of fragments
- * @param {Function} [optsOrPreset.onComplete] - Called after animation completes
+ * @param {object} [opts]
+ * @param {number} [opts.fragments=12] - Number of fragments
+ * @param {Function} [opts.onComplete] - Called after animation completes
  * @returns {Function} Cancel function — removes fragments immediately
  */
-export function shatterElement(element, optsOrPreset = {}) {
-  const opts =
-    typeof optsOrPreset === "string" ? SHATTER_PRESETS[optsOrPreset] || {} : optsOrPreset;
+export function shatterElement(element, opts = {}) {
   const { fragments: count = 12, onComplete } = opts;
 
   if (!element || !element.parentNode) {
@@ -94,6 +87,8 @@ export function shatterElement(element, optsOrPreset = {}) {
     parent.appendChild(frag);
     fragmentEls.push(frag);
   }
+
+  setTimeout(() => playSfx("complete"), durationMs * 0.5);
 
   const effectiveDuration = reducedMotion ? 0 : durationMs;
   const timer = setTimeout(() => {
